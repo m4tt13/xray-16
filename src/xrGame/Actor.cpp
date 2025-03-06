@@ -87,7 +87,6 @@
 
 constexpr float default_feedback_duration = 0.2f;
 
-extern float cammera_into_collision_shift;
 extern int g_first_person_death;
 extern ENGINE_API Fvector4 ps_ssfx_hud_drops_1;
 extern ENGINE_API Fvector4 ps_r2_mask_control;
@@ -170,7 +169,8 @@ CActor::CActor() : CEntityAlive(), current_ik_cam_shift(0)
     m_fClimbFactor = 1.f;
     m_fCamHeightFactor = 0.87f;
 
-    m_fFallTime = s_fFallTime;
+    m_fLandingTime = 0.0f;
+    m_fJumpTime = 0.0f;
     m_bAnimTorsoPlayed = false;
 
     m_pPhysicsShell = NULL;
@@ -297,7 +297,6 @@ void set_box(LPCSTR section, CPHMovementControl& mc, u32 box_num)
     vBOX_center = pSettings->r_fvector3(section, buff);
     strconcat(sizeof(buff), buff, "ph_box", xr_itoa(box_num, buff1, 10), "_size");
     vBOX_size = pSettings->r_fvector3(section, buff);
-    vBOX_size.y += cammera_into_collision_shift / 2.f;
     bb.set(vBOX_center, vBOX_center);
     bb.grow(vBOX_size);
     mc.SetBox(box_num, bb);
@@ -971,20 +970,15 @@ void CActor::SwitchOutBorder(bool new_border_state)
 
 void CActor::g_Physics(Fvector& _accel, float jump, float dt)
 {
-    // Correct accel
-    Fvector accel;
-    accel.set(_accel);
     m_hit_slowmo -= dt;
     if (m_hit_slowmo < 0)
         m_hit_slowmo = 0.f;
 
-    accel.mul(1.f - m_hit_slowmo);
+    float vel_modifier = 1.f - m_hit_slowmo;
 
     if (g_Alive())
     {
-        if (mstate_real & mcClimb && !cameras[eacFirstEye]->bClampYaw)
-            accel.set(0.f, 0.f, 0.f);
-        character_physics_support()->movement()->Calculate(accel, cameras[cam_active]->vDirection, 0, jump, dt, false);
+        character_physics_support()->movement()->Calculate(mstate_real, cameras[cam_active]->vDirection, vel_modifier);
         bool new_border_state = character_physics_support()->movement()->isOutBorder();
         if (m_bOutBorder != new_border_state && Level().CurrentControlEntity() == this)
         {
@@ -1411,6 +1405,7 @@ void CActor::shedule_Update(u32 DT)
         if (!Level().IsDemoPlay())
         {
             mstate_wishful &= ~mcAccel;
+			mstate_wishful &= ~mcJump;
             mstate_wishful &= ~mcLStrafe;
             mstate_wishful &= ~mcRStrafe;
             mstate_wishful &= ~mcLLookout;

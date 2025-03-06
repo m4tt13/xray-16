@@ -567,6 +567,7 @@ void dbg_draw_geoms(xr_vector<CODEGeom*>& m_weapon_geoms)
 
 void CCharacterPhysicsSupport::in_UpdateCL()
 {
+	movement()->in_UpdateCL();
     if (m_eState == esRemoved)
     {
         return;

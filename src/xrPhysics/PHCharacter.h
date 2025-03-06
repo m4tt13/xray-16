@@ -87,6 +87,7 @@ public:
     virtual dBodyID get_body() { return m_body; }
     virtual void fix_body_rotation();
     virtual dSpaceID dSpace() = 0;
+	virtual dGeomID dCap() = 0;
     virtual void get_body_position(Fvector& p);
     virtual void Disable();
     virtual void ReEnable() { ; }

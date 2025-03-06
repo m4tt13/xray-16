@@ -136,6 +136,9 @@
     <Filter Include="physics\damage_receiver">
       <UniqueIdentifier>{633b90c0-0e90-4a1d-b5da-22e81159c94d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="physics\Base\Objects\ActorShell">
+      <UniqueIdentifier>{78966bae-4805-447b-909e-dec281062efa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -317,6 +320,9 @@
     </ClCompile>
     <ClCompile Include="collisiondamagereceiver.cpp">
       <Filter>physics\damage_receiver</Filter>
+    </ClCompile>
+    <ClCompile Include="PHActorGeomShell.cpp">
+      <Filter>physics\Base\Objects\ActorShell</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -595,6 +601,9 @@
     </ClInclude>
     <ClInclude Include="SpaceUtils.h">
       <Filter>physics\Base\Objects\Utils\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="PHActorGeomShell.h">
+      <Filter>physics\Base\Objects\ActorShell</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

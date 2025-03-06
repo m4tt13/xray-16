@@ -168,7 +168,7 @@ IC bool play_liquid_particle_criteria(dxGeomUserData& data, float vel_cret)
     if (vel_cret > Pars::vel_cret_particles)
         return true;
 
-    bool controller = !!data.ph_object && data.ph_object->CastType() == CPHObject::tpCharacter;
+    bool controller = !!data.ph_object && (data.ph_object->CastType() == CPHObject::tpCharacter || data.ph_object->CastType() == CPHObject::tpActorShell);
 
     return !controller && vel_cret > Pars::vel_cret_particles / 4.f;
 

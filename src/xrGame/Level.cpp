@@ -50,6 +50,7 @@
 #include "xrPhysics/console_vars.h"
 #include "xrNetServer/NET_Messages.h"
 #include "xrEngine/GameFont.h"
+#include "physicsquery.h"
 
 #ifdef DEBUG
 #include "level_debug.h"
@@ -110,6 +111,8 @@ CLevel::CLevel()
     pHUD = xr_new<CHUDManager>();
     g_player_hud = xr_new<player_hud>();
     g_player_hud->load_default();
+	
+	PhysicsQuery().Uncache();
 }
 
 CLevel::~CLevel()

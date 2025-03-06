@@ -96,10 +96,7 @@ void CActor::IR_OnKeyboardPress(int cmd)
 
     switch (cmd)
     {
-    case kJUMP: { mstate_wishful |= mcJump;
-    }
-    break;
-    case kSPRINT_TOGGLE: { mstate_wishful ^= mcSprint;
+    case kSPRINT_TOGGLE: { mstate_wishful |= mcSprint;
     }
     break;
     case kCROUCH_TOGGLE:
@@ -253,7 +250,7 @@ void CActor::IR_OnKeyboardRelease(int cmd)
 
         switch (cmd)
         {
-        case kJUMP: mstate_wishful &= ~mcJump; break;
+        case kSPRINT_TOGGLE: mstate_wishful &= ~mcSprint; break;
         case kDROP:
             if (GAME_PHASE_INPROGRESS == Game().Phase())
                 g_PerformDrop();
@@ -307,18 +304,9 @@ void CActor::IR_OnKeyboardHold(int cmd)
         break;
 
     case kACCEL: mstate_wishful |= mcAccel; break;
-    case kL_STRAFE:
-    {
-        mstate_wishful &= ~mcSprint;
-        mstate_wishful |= mcLStrafe;
-        break;
-    }
-    case kR_STRAFE:
-    {
-        mstate_wishful &= ~mcSprint;
-        mstate_wishful |= mcRStrafe;
-        break;
-    }
+	case kJUMP: mstate_wishful |= mcJump; break;
+    case kL_STRAFE: mstate_wishful |= mcLStrafe; break;
+    case kR_STRAFE: mstate_wishful |= mcRStrafe; break;
     case kL_LOOKOUT: mstate_wishful |= mcLLookout; break;
     case kR_LOOKOUT: mstate_wishful |= mcRLookout; break;
     case kFWD: mstate_wishful |= mcFwd; break;

@@ -285,6 +285,7 @@ struct _vector3
     T magnitude() const;
     // Normalize
     T normalize_magn();
+	T normalize2();
 
     SelfRef normalize();
 

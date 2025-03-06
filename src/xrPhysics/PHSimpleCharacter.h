@@ -142,6 +142,7 @@ public:
     virtual void InitContact(dContact* c, bool& do_collide, u16 /*material_idx_1*/, u16 /*material_idx_2*/);
     virtual dSpaceID dSpace() { return m_space; }
     virtual dGeomID dSpacedGeom() { return (dGeomID)m_space; }
+	virtual dGeomID dCap() { return m_cap; }
     virtual void get_spatial_params();
     /////////////////CPHCharacter////////////////////////////////////////////
 public:

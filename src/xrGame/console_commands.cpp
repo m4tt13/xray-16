@@ -50,6 +50,15 @@
 #include "xrPhysics/console_vars.h"
 #include "GametaskManager.h"
 
+#include "xrPhysics/CalculateTriangle.h"
+#include "xrPhysics/IColisiondamageInfo.h"
+#include "xrPhysics/ICollideValidator.h"
+#include "xrPhysics/PHActorGeomShell.h"
+#include "xrPhysics/PHCharacter.h"
+#include "xrPhysics/PHObject.h"
+#include "physicsquery.h"
+#include "hl2movement.h"
+
 #ifdef DEBUG
 #include "PHDebug.h"
 #include "ui/UIDebugFonts.h"
@@ -2038,6 +2047,38 @@ void CCC_RegisterCommands()
 
     // options
     g_OptConCom.Init();
+	
+	// hl2 movement
+    CMD2(CCC_Float_NoLimits, "sv_frametime", &CHL2Movement::m_flFrameTime);
+    CMD2(CCC_Float_NoLimits, "cl_forwardspeed", &CHL2Movement::m_flForwardSpeed);
+    CMD2(CCC_Float_NoLimits, "cl_sidespeed", &CHL2Movement::m_flSideSpeed);
+	CMD2(CCC_Float_NoLimits, "sv_walkspeed", &CHL2Movement::m_flWalkSpeed);
+	CMD2(CCC_Float_NoLimits, "sv_slowwalkspeed", &CHL2Movement::m_flSlowWalkSpeed);
+	CMD2(CCC_Float_NoLimits, "sv_sprintspeed", &CHL2Movement::m_flSprintSpeed);
+    CMD2(CCC_Float_NoLimits, "sv_maxcontrolspeed", &CHL2Movement::m_flMaxControlSpeed);
+	CMD2(CCC_Float_NoLimits, "sv_jumppower", &CHL2Movement::m_flJumpPower);
+	CMD2(CCC_Float_NoLimits, "sv_gravity", &CHL2Movement::m_flGravity);
+	CMD2(CCC_Float_NoLimits, "sv_maxvelocity", &CHL2Movement::m_flMaxVelocity);
+	CMD2(CCC_Float_NoLimits, "sv_nonjumpvel", &CHL2Movement::m_flNonJumpVelocity);
+	CMD2(CCC_Float_NoLimits, "sv_bounce", &CHL2Movement::m_flBounce);
+	CMD2(CCC_Float_NoLimits, "sv_stepsize", &CHL2Movement::m_flStepSize);
+	CMD2(CCC_Float_NoLimits, "sv_friction", &CHL2Movement::m_flFriction);
+	CMD2(CCC_Float_NoLimits, "sv_stopspeed", &CHL2Movement::m_flStopSpeed);
+	CMD2(CCC_Float_NoLimits, "sv_walkable_normal", &CHL2Movement::m_flWalkableNormal);
+	CMD2(CCC_Float_NoLimits, "sv_air_max_wishspeed", &CHL2Movement::m_flAirMaxWishSpeed);
+	CMD2(CCC_Float_NoLimits, "sv_accelerate", &CHL2Movement::m_flAccelerate);
+	CMD2(CCC_Float_NoLimits, "sv_airaccelerate", &CHL2Movement::m_flAirAccelerate);
+    CMD2(CCC_Float_NoLimits, "sv_ladder_dist", &CHL2Movement::m_flLadderDistance);
+    CMD2(CCC_Float_NoLimits, "sv_ladder_leavespeed", &CHL2Movement::m_flLadderLeaveSpeed);
+	CMD2(CCC_Float_NoLimits, "sv_climbspeed", &CHL2Movement::m_flClimbSpeed);
+    CMD2(CCC_Float_NoLimits, "sv_duckspeed", &CHL2Movement::m_flDuckSpeed);
+    CMD2(CCC_Float_NoLimits, "sv_unduckspeed", &CHL2Movement::m_flUnDuckSpeed);
+    CMD2(CCC_Float_NoLimits, "sv_pushaway_force", &CHL2Movement::m_flPushawayForce);
+    CMD2(CCC_Float_NoLimits, "sv_pushaway_max_force", &CHL2Movement::m_flPushawayMaxForce);
+    CMD4(CCC_Integer, "cl_speedometer", &CHL2Movement::m_bSpeedometer, FALSE, TRUE);
+	CMD4(CCC_Integer, "sv_sticktoground", &CHL2Movement::m_bStickToGround, FALSE, TRUE);
+	CMD4(CCC_Integer, "sv_enable_bhop", &CHL2Movement::m_bEnableBHop, FALSE, TRUE);
+    CMD4(CCC_Integer, "sv_enable_abh", &CHL2Movement::m_bEnableABH, FALSE, TRUE);
 
     CMD1(CCC_MemStats, "stat_memory");
 

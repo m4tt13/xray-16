@@ -51,6 +51,7 @@
     <ClCompile Include="params.cpp" />
     <ClCompile Include="PHActivationShape.cpp" />
     <ClCompile Include="PHActorCharacter.cpp" />
+    <ClCompile Include="PHActorGeomShell.cpp" />
     <ClCompile Include="PHAICharacter.cpp" />
     <ClCompile Include="PHCapture.cpp" />
     <ClCompile Include="PHCaptureInit.cpp" />
@@ -135,6 +136,7 @@
     <ClInclude Include="PHActivationShape.h" />
     <ClInclude Include="PHActorCharacter.h" />
     <ClInclude Include="PHActorCharacterInline.h" />
+    <ClInclude Include="PHActorGeomShell.h" />
     <ClInclude Include="PHAICharacter.h" />
     <ClInclude Include="PHBaseBodyEffector.h" />
     <ClInclude Include="PHCapture.h" />

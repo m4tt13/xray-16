@@ -288,6 +288,17 @@ T _vector3<T>::normalize_magn()
 }
 
 template <typename T>
+T _vector3<T>::normalize2()
+{
+    const T len = magnitude();
+	const T inv_len = T(1) / (len + std::numeric_limits<T>::epsilon());
+	x *= inv_len;
+	y *= inv_len;
+	z *= inv_len;
+	return len;
+}
+
+template <typename T>
 _vector3<T>& _vector3<T>::normalize()
 {
 	VERIFY(square_magnitude() > std::numeric_limits<T>::min());
@@ -608,6 +619,7 @@ template Fvector& Fvector::mad(const Fvector& p, const Fvector& d, const Fvector
 template Fvector::TYPE Fvector::square_magnitude() const;
 template Fvector::TYPE Fvector::magnitude() const;
 template Fvector::TYPE Fvector::normalize_magn();
+template Fvector::TYPE Fvector::normalize2();
 
 template Fvector& Fvector::normalize();
 template Fvector& Fvector::normalize_safe();

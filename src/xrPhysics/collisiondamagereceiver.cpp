@@ -30,7 +30,7 @@ void DamageReceiverCollisionCallback(bool& do_colide, bool bo1, dContact& c, SGa
 
     float damager_material_factor = material_damager->fBounceDamageFactor;
 
-    if (ud_damager && ud_damager->ph_object && ud_damager->ph_object->CastType() == CPHObject::tpCharacter)
+    if (ud_damager && ud_damager->ph_object && (ud_damager->ph_object->CastType() == CPHObject::tpCharacter || ud_damager->ph_object->CastType() == CPHObject::tpActorShell))
         o_damager->BonceDamagerCallback(damager_material_factor);
 
     // CCharacterPhysicsSupport* phs=static_cast<CPhysicsShellHolder*>(o_damager)->character_physics_support();

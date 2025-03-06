@@ -608,6 +608,7 @@
     <ClInclude Include="client_spawn_manager.h" />
     <ClInclude Include="client_spawn_manager_inline.h" />
     <ClInclude Include="ClimableObject.h" />
+    <ClInclude Include="collisionutils.h" />
     <ClInclude Include="configs_common.h" />
     <ClInclude Include="configs_dumper.h" />
     <ClInclude Include="configs_dump_verifyer.h" />
@@ -765,6 +766,7 @@
     <ClInclude Include="hit_immunity_space.h" />
     <ClInclude Include="hit_memory_manager.h" />
     <ClInclude Include="hit_memory_manager_inline.h" />
+    <ClInclude Include="hl2movement.h" />
     <ClInclude Include="HolderEntityObject.h" />
     <ClInclude Include="holder_custom.h" />
     <ClInclude Include="HUDCrosshair.h" />
@@ -931,6 +933,7 @@
     <ClInclude Include="PHSoundPlayer.h" />
     <ClInclude Include="PhysicObject.h" />
     <ClInclude Include="PhysicsGamePars.h" />
+    <ClInclude Include="physicsquery.h" />
     <ClInclude Include="PhysicsShellHolder.h" />
     <ClInclude Include="PhysicsSkeletonObject.h" />
     <ClInclude Include="physics_element_scripted.h" />
@@ -2037,6 +2040,7 @@
       <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="ClimableObject.cpp" />
+    <ClCompile Include="collisionutils.cpp" />
     <ClCompile Include="configs_common.cpp" />
     <ClCompile Include="configs_dumper.cpp" />
     <ClCompile Include="configs_dump_verifyer.cpp" />
@@ -2287,6 +2291,7 @@
       <PrecompiledHeaderFile>pch_script.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="hl2movement.cpp" />
     <ClCompile Include="HolderEntityObject.cpp" />
     <ClCompile Include="holder_custom.cpp" />
     <ClCompile Include="holder_custom_script.cpp">
@@ -2549,6 +2554,7 @@
       <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="PhysicsGamePars.cpp" />
+    <ClCompile Include="physicsquery.cpp" />
     <ClCompile Include="PhysicsShellHolder.cpp">
       <PrecompiledHeaderFile>pch_script.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(ProjectName)_script.pch</PrecompiledHeaderOutputFile>
@@ -3421,6 +3427,12 @@
     </ProjectReference>
     <ProjectReference Include="$(SolutionDir)xrMaterialSystem\xrMaterialSystem.vcxproj">
       <Project>{2c419512-6eee-4707-bc51-2e834855552e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Externals\ODE.vcxproj">
+      <Project>{1bf75feb-87dd-486c-880b-227987d191c2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Externals\OPCODE\OPCODE.vcxproj">
+      <Project>{dafd6d98-3dcd-40ad-bc85-ec71797b6767}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

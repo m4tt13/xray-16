@@ -89,6 +89,7 @@ public:
     MODEL();
     ~MODEL();
 
+	IC const Opcode::OPCODE_Model* get_tree() const { return tree; }
     IC Fvector* get_verts() { return verts; }
     IC const Fvector* get_verts() const { return verts; }
     IC int get_verts_count() const { return verts_count; }

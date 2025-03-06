@@ -9,6 +9,7 @@ public:
     virtual const Fbox* Boxes() = 0;
     virtual const Fbox& Box() = 0;
     virtual void InterpolateBox(u32 id, float k) = 0;
+	virtual void SetVelocity(const Fvector& v) = 0;
 };
 
 XRPHYSICS_API bool ActivateBoxDynamic(IPHMovementControl* mov_control, bool character_exist, u32 id,

@@ -27,6 +27,7 @@ class IPhysicsShellHolder;
 class CPHCapture;
 class IPHCapture;
 class CPHCharacter;
+class CHL2Movement;
 class IPhysicsElement;
 
 class CPHMovementControl : public IPHMovementControl
@@ -38,6 +39,7 @@ class CPHMovementControl : public IPHMovementControl
 public:
     IGameObject* ParentObject() { return pObject; }
     IElevatorState* ElevatorState();
+    void in_UpdateCL();
     void in_shedule_Update(u32 DT);
     void PHCaptureObject(CPhysicsShellHolder* object, CPHCaptureBoneCallback* cb = 0);
     void PHCaptureObject(CPhysicsShellHolder* object, u16 element);
@@ -48,6 +50,7 @@ public:
     void PHReleaseObject();
     Fvector PHCaptureGetNearestElemPos(const CPhysicsShellHolder* object);
     Fmatrix PHCaptureGetNearestElemTransform(CPhysicsShellHolder* object);
+    u16 GetMaterial() const { return m_material; }
     void SetMaterial(u16 material);
     void SetAirControlParam(float param) { fAirControlParam = param; }
     void SetActorRestrictorRadius(ERestrictionType rt, float r);
@@ -89,6 +92,7 @@ public:
     };
     enum CharacterType
     {
+        invalid = -1,
         actor,
         ai
     };
@@ -100,6 +104,7 @@ private:
 
     CharacterType eCharacterType;
     CPHCharacter* m_character;
+    CHL2Movement* m_pHL2Movement;
     IPHCapture* m_capture;
 
     float m_fGroundDelayFactor;
@@ -110,6 +115,7 @@ private:
     EEnvironment eEnvironment;
     Fbox aabb;
     Fbox boxes[4];
+    float camera_height;
 
     u32 trying_times[4];
     Fvector trying_poses[4];
@@ -144,6 +150,7 @@ public:
     bool bExernalImpulse;
     BOOL bSleep;
     bool bNonInteractiveMode;
+    BOOL bJumped;
     BOOL gcontact_Was; // Приземление
     float gcontact_Power; // Насколько сильно ударились
     float gcontact_HealthLost; // Скоко здоровья потеряли
@@ -164,6 +171,7 @@ public:
     const Fvector& GetPathDir() { return _vPathDir; }
     void SetPathDir(const Fvector& v);
 
+    float CollisionDamageFactor() const { return fCollisionDamageFactor; }
     void GetCharacterVelocity(Fvector& velocity);
     float GetVelocityMagnitude() { return vVelocity.magnitude(); }
     float GetVelocityActual() { return fActualVelocity; }
@@ -212,6 +220,7 @@ public:
         boxes[id].set(BB);
         aabb.set(BB);
     }
+    float CameraHeight() const { return camera_height; }
     void SetMass(float M);
 
     float GetMass() { return fMass; }
@@ -228,6 +237,7 @@ public:
     bool TryPosition(Fvector& pos);
     bool IsCharacterEnabled();
     void DisableCharacter();
+    void Calculate(u32 mstate, const Fvector& camDir, float vel_modifier);
     void Calculate(Fvector& vAccel, const Fvector& camDir, float ang_speed, float jump, float dt, bool bLight);
     void Calculate(const xr_vector<DetailPathManager::STravelPathPoint>& path, // in path
         float speed, // in speed
@@ -271,12 +281,14 @@ public:
         int index, Fvector& corrected_path_dir);
 
     //	void				Move					(Fvector& Dest, Fvector& Motion, BOOL bDynamic=FALSE){};
+    BOOL IsAffectedByGravity() const { return bIsAffectedByGravity; }
     void SetApplyGravity(BOOL flag);
     void GetDeathPosition(Fvector& pos);
     void SetEnvironment(int enviroment, int old_enviroment);
     void SetFrictionFactor(float f);
     float GetFrictionFactor();
     void MulFrictionFactor(float f);
+    void SetAirControlFactor(float f);
     void ApplyImpulse(const Fvector& dir, const float P);
     void ApplyHit(const Fvector& dir, const float P, ALife::EHitType hit_type);
     void SetJumpUpVelocity(float velocity);

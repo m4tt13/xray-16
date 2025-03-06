@@ -124,3 +124,8 @@ void CPHLeaderGeomShell::near_callback(CPHObject* obj)
         ch->SetElevator(m_pClimable);
     }
 }
+
+bool IsLeaderGeomShell(CPHObject* obj)
+{
+    return !!smart_cast<CPHLeaderGeomShell*>(obj);
+}

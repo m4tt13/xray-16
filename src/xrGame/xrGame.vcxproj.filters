@@ -2230,6 +2230,9 @@
     <Filter Include="AI\AMonsters\common\monster states\Rest\Squad\Rest">
       <UniqueIdentifier>{4946196d-1f2b-4e07-9207-f0789b2528fc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Physics\HL2Movement">
+      <UniqueIdentifier>{41164f55-8a9b-4939-bc2b-d0ba13a0c2bb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mt_config.h">
@@ -6314,6 +6317,15 @@
     <ClInclude Include="ui\UIWheelMenu.h">
       <Filter>UI\Common\MainIngame</Filter>
     </ClInclude>
+    <ClInclude Include="collisionutils.h">
+      <Filter>Physics\HL2Movement</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2movement.h">
+      <Filter>Physics\HL2Movement</Filter>
+    </ClInclude>
+    <ClInclude Include="physicsquery.h">
+      <Filter>Physics\HL2Movement</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="damage_manager.cpp">
@@ -9533,6 +9545,15 @@
     </ClCompile>
     <ClCompile Include="ui\UIWheelMenu.cpp">
       <Filter>UI\Common\MainIngame</Filter>
+    </ClCompile>
+    <ClCompile Include="collisionutils.cpp">
+      <Filter>Physics\HL2Movement</Filter>
+    </ClCompile>
+    <ClCompile Include="hl2movement.cpp">
+      <Filter>Physics\HL2Movement</Filter>
+    </ClCompile>
+    <ClCompile Include="physicsquery.cpp">
+      <Filter>Physics\HL2Movement</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

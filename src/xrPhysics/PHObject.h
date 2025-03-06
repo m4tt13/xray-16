@@ -46,14 +46,14 @@ public:
         tpNotDefinite,
         tpShell,
         tpCharacter,
-        tpStaticShell
+        tpStaticShell,
+		tpActorShell
     };
 
 protected:
     Fvector AABB;
 
 protected:
-    virtual dGeomID dSpacedGeom() = 0;
     virtual void get_spatial_params() = 0;
     virtual void spatial_register();
     void SetRayMotions() { m_flags.set(fl_ray_motions, TRUE); }
@@ -61,6 +61,7 @@ protected:
     void SetPrefereExactIntegration() { m_island.SetPrefereExactIntegration(); }
     CPHObject* SelfPointer() { return this; }
 public:
+	virtual dGeomID dSpacedGeom() = 0;
     IC BOOL IsRayMotion() { return m_flags.test(fl_ray_motions); }
     void IslandReinit() { m_island.Unmerge(); }
     void IslandStep(dReal step) { m_island.Step(step); }

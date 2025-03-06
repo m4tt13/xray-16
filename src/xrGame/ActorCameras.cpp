@@ -97,9 +97,7 @@ void CActor::cam_UnsetLadder()
 float cammera_into_collision_shift = 0.05f;
 float CActor::CameraHeight()
 {
-    Fvector R;
-    character_physics_support()->movement()->Box().getsize(R);
-    return m_fCamHeightFactor * (R.y - cammera_into_collision_shift);
+    return m_fCamHeightFactor * (character_physics_support()->movement()->CameraHeight() - cammera_into_collision_shift);
 }
 
 IC float viewport_near(float& w, float& h)
@@ -289,35 +287,9 @@ void CActor::cam_Update(float dt, float fFOV)
     if ((mstate_real & mcClimb) && (cam_active != eacFreeLook))
         camUpdateLadder(dt);
     on_weapon_shot_update();
-    float y_shift = 0;
 
-    if (GamePersistent().GameType() != eGameIDSingle && ik_cam_shift && character_physics_support() &&
-        character_physics_support()->ik_controller())
-    {
-        y_shift = character_physics_support()->ik_controller()->Shift();
-        float cam_smooth_k = 1.f;
-        if (_abs(y_shift - current_ik_cam_shift) > ik_cam_shift_tolerance)
-        {
-            cam_smooth_k = 1.f - ik_cam_shift_speed * dt / 0.01f;
-        }
-
-        if (_abs(y_shift) < ik_cam_shift_tolerance / 2.f)
-            cam_smooth_k = 1.f - ik_cam_shift_speed * 1.f / 0.01f * dt;
-        clamp(cam_smooth_k, 0.f, 1.f);
-        current_ik_cam_shift = cam_smooth_k * current_ik_cam_shift + y_shift * (1.f - cam_smooth_k);
-    }
-    else
-        current_ik_cam_shift = 0;
-
-    // Alex ADD: smooth crouch fix
-    const float targetHeight = CameraHeight();
-    if (CurrentHeight < 0.0f)
-        CurrentHeight = targetHeight;
-    else if (!fsimilar(CurrentHeight, targetHeight))
-    {
-        const float dti = ik_cam_shift_interpolation * dt;
-        CurrentHeight = (CurrentHeight * (1.0f - dti)) + (targetHeight * dti);
-    }
+    current_ik_cam_shift = 0;
+    CurrentHeight = CameraHeight();
 
     Fvector point = { 0, CurrentHeight + current_ik_cam_shift, 0 };
 
@@ -338,23 +310,7 @@ void CActor::cam_Update(float dt, float fFOV)
         dangle.z = (PI_DIV_2 - ((PI + valid_angle) / 2));
     }
 
-    float flCurrentPlayerY = xform.c.y;
-
-    // Smooth out stair step ups
-    if ((character_physics_support()->movement()->Environment() == CPHMovementControl::peOnGround) &&
-        (flCurrentPlayerY - fPrevCamPos > 0))
-    {
-        fPrevCamPos += dt * 1.5f;
-        if (fPrevCamPos > flCurrentPlayerY)
-            fPrevCamPos = flCurrentPlayerY;
-        if (flCurrentPlayerY - fPrevCamPos > 0.2f)
-            fPrevCamPos = flCurrentPlayerY - 0.2f;
-        point.y += fPrevCamPos - flCurrentPlayerY;
-    }
-    else
-    {
-        fPrevCamPos = flCurrentPlayerY;
-    }
+    fPrevCamPos = xform.c.y;
 
     float _viewport_near = VIEWPORT_NEAR;
     // calc point

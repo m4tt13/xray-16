@@ -9,6 +9,12 @@
 bool CPHMovementControl::ActivateBoxDynamic(
     u32 id, int num_it /*=8*/, int num_steps /*5*/, float resolve_depth /*=0.01f*/)
 {
+    if (eCharacterType == actor)
+    {
+        ActivateBox(id);
+        return true;
+    }
+
     bool character_exist = CharacterExist();
     if (character_exist && trying_times[id] != u32(-1))
     {

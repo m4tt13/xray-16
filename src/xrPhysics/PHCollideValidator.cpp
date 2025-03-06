@@ -76,3 +76,5 @@ void CPHCollideValidator::SetClassSmallNotCollide(CPHObject& obj)
 }
 
 CGID RegisterGroup() { return CPHCollideValidator::RegisterGroup(); }
+
+bool do_obj_collide(const CPHObject& obj1, const CPHObject& obj2) { return CPHCollideValidator::DoCollide(obj1, obj2); }

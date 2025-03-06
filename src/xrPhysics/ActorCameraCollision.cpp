@@ -23,9 +23,6 @@ static bool cam_collided = false;
 static bool cam_step = false;
 extern dJointGroupID ContactGroup;
 static const float camera_collision_sckin_depth = 0.04f;
-float camera_collision_character_skin_depth = 0.4f;
-float camera_collision_character_shift_z = 0.3f;
-static const float camera_collision_character_gl_shift_y = 0.8f;
 static void cammera_shell_collide_callback_common(
     bool& do_collide, bool bo1, dContact& c, SGameMtl* material_1, SGameMtl* material_2)
 {
@@ -83,22 +80,6 @@ static void cammera_shell_collide_callback(
     cammera_shell_collide_callback_common(do_collide, bo1, c, material_1, material_2);
 }
 
-static void cammera_shell_character_collide_callback(
-    bool& do_collide, bool bo1, dContact& c, SGameMtl* material_1, SGameMtl* material_2)
-{
-    dxGeomUserData* oposite_data = retrieveGeomUserData(bo1 ? c.geom.g2 : c.geom.g1);
-    do_collide = false;
-    if (!oposite_data || !oposite_data->ph_object || oposite_data->ph_object->CastType() != CPHObject::tpCharacter)
-        return;
-
-    if (!oposite_data->ph_ref_object || !(oposite_data->ph_ref_object->IsStalker()))
-        return;
-
-    do_collide = true;
-    c.surface.soft_cfm = soft_cfm_for_controllers;
-    cammera_shell_collide_callback_common(do_collide, bo1, c, material_1, material_2);
-}
-
 static void get_viewport_geom(Fvector& box, Fmatrix& form, const CCameraBase& camera, float _viewport_near)
 {
     box.z = _viewport_near / 2.f;
@@ -132,26 +113,10 @@ CPhysicsShell* create_camera_shell(IPhysicsShellHolder* actor)
     CPhysicsShell* shell = P_build_SimpleShell(actor, actor_camera_hudge_mass, true);
     CPhysicsElement* roote = shell->get_ElementByStoreOrder(0);
     // Fobb obb; obb.m_halfsize.set(0.5f,0.5f,0.5f); obb.m_rotate.identity();obb.m_translate.set(0,0,0);
-    Fcylinder cyl;
-    cyl.m_center.set(0, -0.8f, 0);
-    cyl.m_direction.set(0, 1, 0);
-    cyl.m_height = 1.8f;
-    cyl.m_radius = 0.5f;
     // roote->add_Box(obb);
-    CODEGeom* character_test_geom = smart_cast<CODEGeom*>(xr_new<CCylinderGeom>(cyl));
-    character_test_geom->build(Fvector().set(0, 0, 0)); // roote->mass_Center()
-    VERIFY(smart_cast<CPHElement*>(roote));
-    CPHElement* eeroot = static_cast<CPHElement*>(roote);
-
-    character_test_geom->set_body(eeroot->get_body());
-    // character_test_geom->set_ref_object(smart_cast<CPhysicsShellHolder*>(actor));
-    character_test_geom->set_ref_object(actor);
-    CPHGeometryBits::set_ignore_static(*character_test_geom);
-    roote->add_geom(character_test_geom);
     VERIFY(shell);
     shell->set_ApplyByGravity(false);
     shell->set_ObjectContactCallback(cammera_shell_collide_callback);
-    character_test_geom->set_obj_contact_cb(cammera_shell_character_collide_callback);
     shell->set_ContactCallback(0);
     shell->set_CallbackData(smart_cast<CPHObject*>(shell));
     dMass m;
@@ -202,27 +167,8 @@ void set_camera_collision(const Fvector& box_size, const Fmatrix& xform, CPhysic
     m.c.z -= box_size.z;
     m.c.y -= box_size.y * 0.5f;
     box->set_local_form_bt(m);
-    // CBoxGeom* character_collision_geom = smart_cast<CBoxGeom*>( roote->geometry( 1 ) );
-    CCylinderGeom* character_collision_geom = smart_cast<CCylinderGeom*>(roote->geometry(1));
-    VERIFY(character_collision_geom);
-    const Fvector character_collision_box_size =
-        Fvector().add(box_size, Fvector().set(camera_collision_character_skin_depth,
-                                    camera_collision_character_skin_depth, camera_collision_character_skin_depth));
-    // character_collision_geom->set_size( character_collision_box_size );
-    character_collision_geom->set_radius(character_collision_box_size.x);
-    VERIFY(_valid(xform));
-    Fmatrix character_collision_geom_local_xform(Fmatrix().invert(xform));
-    Fvector shift_fv = Fvector().mul(xform.k, camera_collision_character_shift_z);
-    shift_fv.y = 0;
-    character_collision_geom_local_xform.transform_dir(shift_fv);
 
-    // character_collision_geom_local_xform.c.set( 0, -0.8f, 0 );
-    character_collision_geom_local_xform.c.set(
-        Fvector()
-            .mul(character_collision_geom_local_xform.j, -camera_collision_character_gl_shift_y)
-            .add(Fvector().set(shift_fv)));
-    // character_collision_geom_local_xform.c.y =-0.8f;
-    character_collision_geom->set_local_form_bt(character_collision_geom_local_xform);
+    VERIFY(_valid(xform));
     roote->SetTransform(xform, mh_clear);
 }
 

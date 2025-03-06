@@ -433,6 +433,15 @@ struct Fmatrix
         dest.y = v.x * _12 + v.y * _22 + v.z * _32 + _42;
         dest.z = v.x * _13 + v.y * _23 + v.z * _33 + _43;
     }
+	
+	ICF void inverse_transform_tiny(Fvector& dest, const Fvector& v) const // preferred to use
+    {
+        Fvector t;
+        t.sub( v, c );
+        dest.x = t.x * _11 + t.y * _12 + t.z * _13;
+        dest.y = t.x * _21 + t.y * _22 + t.z * _23;
+        dest.z = t.x * _31 + t.y * _32 + t.z * _33;
+    }
 
     ICF void transform_tiny32(Fvector2& dest, const Fvector& v) const // preferred to use
     {
@@ -452,6 +461,13 @@ struct Fmatrix
         dest.x = v.x * _11 + v.y * _21 + v.z * _31;
         dest.y = v.x * _12 + v.y * _22 + v.z * _32;
         dest.z = v.x * _13 + v.y * _23 + v.z * _33;
+    }
+	
+	ICF void inverse_transform_dir(Fvector& dest, const Fvector& v) const // preferred to use
+    {
+        dest.x = v.x * _11 + v.y * _12 + v.z * _13;
+        dest.y = v.x * _21 + v.y * _22 + v.z * _23;
+        dest.z = v.x * _31 + v.y * _32 + v.z * _33;
     }
 
     IC void transform(Fvector4& dest, const Fvector& v) const // preferred to use

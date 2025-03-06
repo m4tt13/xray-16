@@ -224,7 +224,6 @@ protected:
 
     float m_fLandingTime;
     float m_fJumpTime;
-    float m_fFallTime;
     float m_fCamHeightFactor;
 
     // Dropping
@@ -823,4 +822,3 @@ extern Fvector g_start_position;
 extern int g_start_game_vertex_id;
 extern CActor* g_actor;
 CActor* Actor();
-extern const float s_fFallTime;

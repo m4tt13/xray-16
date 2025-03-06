@@ -318,6 +318,33 @@ public:
     }
 };
 
+class ENGINE_API CCC_Float_NoLimits : public IConsole_Command
+{
+protected:
+    float* value;
+
+public:
+    CCC_Float_NoLimits(pcstr N, float* V)
+        : IConsole_Command(N), value(V){}
+    float GetValue() const { return *value; }
+
+    virtual void Execute(pcstr args) { *value = float(atof(args)); }
+    virtual void GetStatus(TStatus& S)
+    {
+        xr_sprintf(S, sizeof(S), "%3.5f", *value);
+        while (xr_strlen(S) && ('0' == S[xr_strlen(S) - 1]))
+            S[xr_strlen(S) - 1] = 0;
+    }
+    virtual void Info(TInfo& I) { xr_strcpy(I, "float value"); }
+    virtual void fill_tips(vecTips& tips, u32 mode)
+    {
+        TStatus str;
+        xr_sprintf(str, sizeof(str), "%3.5f", *value);
+        tips.push_back(str);
+        IConsole_Command::fill_tips(tips, mode);
+    }
+};
+
 class ENGINE_API CCC_Vector3 : public IConsole_Command
 {
 protected:

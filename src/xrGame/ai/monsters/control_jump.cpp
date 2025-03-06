@@ -104,7 +104,7 @@ void CControlJump::on_release()
 
     if (m_data.target_object && m_data.flags.test(SControlJumpData::eUseAutoAim))
     {
-        m_object->character_physics_support()->movement()->PHCharacter()->SetAirControlFactor(0.f);
+        m_object->character_physics_support()->movement()->SetAirControlFactor(0.f);
     }
 
     m_data.flags.set(SControlJumpData::eUseAutoAim, 0);
@@ -266,7 +266,7 @@ void CControlJump::select_next_anim_state()
     }
 
     if (in_auto_aim())
-        m_object->character_physics_support()->movement()->PHCharacter()->SetAirControlFactor(
+        m_object->character_physics_support()->movement()->SetAirControlFactor(
             100.f * m_auto_aim_factor);
 }
 

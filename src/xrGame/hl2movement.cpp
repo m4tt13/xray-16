@@ -37,6 +37,7 @@ float CHL2Movement::m_flBounce = 0.0f;
 float CHL2Movement::m_flStepSize = 0.5f;
 float CHL2Movement::m_flFriction = 8.0f;
 float CHL2Movement::m_flStopSpeed = 0.25f;
+float CHL2Movement::m_flStandableNormal = 0.625f;
 float CHL2Movement::m_flWalkableNormal = 0.625f;
 float CHL2Movement::m_flAirMaxWishSpeed = 0.75f;
 float CHL2Movement::m_flAccelerate = 10.0f;
@@ -1816,12 +1817,12 @@ void CHL2Movement::CategorizePosition( void )
 		TryTouchGround( bumpOrigin, point, box.vMin, box.vMax, pm );
 
 		// Was on ground, but now suddenly am not.  If we hit a steep plane, we are not on ground
-		if ( !pm.DidHit() || pm.plane.normal[1] < m_flWalkableNormal )
+		if ( !pm.DidHit() || pm.plane.normal[1] < m_flStandableNormal )
 		{
 			// Test four sub-boxes, to see if any of them would have found shallower slope we could actually stand on
 			TryTouchGroundInQuadrants( bumpOrigin, point, pm );
 
-			if ( !pm.DidHit() || pm.plane.normal[1] < m_flWalkableNormal )
+			if ( !pm.DidHit() || pm.plane.normal[1] < m_flStandableNormal )
 			{
 				m_bOnGround = false;
 				// probably want to add a check for a +y velocity too!
@@ -1934,7 +1935,7 @@ void CHL2Movement::TryTouchGroundInQuadrants( const Fvector& start, const Fvecto
 	mins = minsSrc;
 	maxs.set( _min( 0.0f, maxsSrc.x ), maxsSrc.y, _min( 0.0f, maxsSrc.z ) );
 	TryTouchGround( start, end, mins, maxs, pm );
-	if ( pm.DidHit() && pm.plane.normal[1] >= m_flWalkableNormal)
+	if ( pm.DidHit() && pm.plane.normal[1] >= m_flStandableNormal)
 	{
 		pm.fraction = fraction;
 		pm.endpos = endpos;
@@ -1945,7 +1946,7 @@ void CHL2Movement::TryTouchGroundInQuadrants( const Fvector& start, const Fvecto
 	mins.set( _max( 0.0f, minsSrc.x ), minsSrc.y, _max( 0.0f, minsSrc.z ) );
 	maxs = maxsSrc;
 	TryTouchGround( start, end, mins, maxs, pm );
-	if ( pm.DidHit() && pm.plane.normal[1] >= m_flWalkableNormal)
+	if ( pm.DidHit() && pm.plane.normal[1] >= m_flStandableNormal)
 	{
 		pm.fraction = fraction;
 		pm.endpos = endpos;
@@ -1956,7 +1957,7 @@ void CHL2Movement::TryTouchGroundInQuadrants( const Fvector& start, const Fvecto
 	mins.set( minsSrc.x, minsSrc.y, _max( 0.0f, minsSrc.z ) );
 	maxs.set( _min( 0.0f, maxsSrc.x ), maxsSrc.y, maxsSrc.z );
 	TryTouchGround( start, end, mins, maxs, pm );
-	if ( pm.DidHit() && pm.plane.normal[1] >= m_flWalkableNormal)
+	if ( pm.DidHit() && pm.plane.normal[1] >= m_flStandableNormal)
 	{
 		pm.fraction = fraction;
 		pm.endpos = endpos;
@@ -1967,7 +1968,7 @@ void CHL2Movement::TryTouchGroundInQuadrants( const Fvector& start, const Fvecto
 	mins.set( _max( 0.0f, minsSrc.x ), minsSrc.y, minsSrc.z );
 	maxs.set( maxsSrc.x, maxsSrc.y, _min( 0.0f, maxsSrc.z ) );
 	TryTouchGround( start, end, mins, maxs, pm );
-	if ( pm.DidHit() && pm.plane.normal[1] >= m_flWalkableNormal)
+	if ( pm.DidHit() && pm.plane.normal[1] >= m_flStandableNormal)
 	{
 		pm.fraction = fraction;
 		pm.endpos = endpos;

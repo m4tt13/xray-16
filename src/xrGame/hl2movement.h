@@ -223,6 +223,7 @@ public:
 	static float m_flStepSize;
 	static float m_flFriction;
 	static float m_flStopSpeed;
+    static float m_flStandableNormal;
 	static float m_flWalkableNormal;
 	static float m_flAirMaxWishSpeed;
 	static float m_flAccelerate;

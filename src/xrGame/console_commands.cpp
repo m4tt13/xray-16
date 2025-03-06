@@ -2064,6 +2064,7 @@ void CCC_RegisterCommands()
 	CMD2(CCC_Float_NoLimits, "sv_stepsize", &CHL2Movement::m_flStepSize);
 	CMD2(CCC_Float_NoLimits, "sv_friction", &CHL2Movement::m_flFriction);
 	CMD2(CCC_Float_NoLimits, "sv_stopspeed", &CHL2Movement::m_flStopSpeed);
+    CMD2(CCC_Float_NoLimits, "sv_standable_normal", &CHL2Movement::m_flStandableNormal);
 	CMD2(CCC_Float_NoLimits, "sv_walkable_normal", &CHL2Movement::m_flWalkableNormal);
 	CMD2(CCC_Float_NoLimits, "sv_air_max_wishspeed", &CHL2Movement::m_flAirMaxWishSpeed);
 	CMD2(CCC_Float_NoLimits, "sv_accelerate", &CHL2Movement::m_flAccelerate);

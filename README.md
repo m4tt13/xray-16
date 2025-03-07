@@ -1,8 +1,8 @@
-## S.T.A.L.K.E.R.: Call of Pripyat with HL2 Movement
+# S.T.A.L.K.E.R.: Call of Pripyat with HL2 Movement
 
 This modification transfers the physics of movement directly from the HL2.
 
-# Features
+## Features
 * Bunnyhopping
 * Ground/air strafing
 * Surfing
@@ -11,7 +11,7 @@ This modification transfers the physics of movement directly from the HL2.
 * Climbing ladders
 * Accelerated Back Hopping (ABH)
 
-# Console commands
+## Console commands
 * sv_frametime - Time between physics simulations
 * cl_forwardspeed - The speed of the actor when moving forward/back
 * cl_sidespeed - The speed of the actor when moving sideways

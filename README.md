@@ -1,6 +1,6 @@
 # S.T.A.L.K.E.R.: Call of Pripyat with HL2 Movement
 
-This modification transfers the physics of movement directly from the HL2.
+This modification for [OpenXRay](https://github.com/OpenXRay/xray-16) transfers the physics of movement directly from the HL2.
 
 ## Features
 * Bunnyhopping

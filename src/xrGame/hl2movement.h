@@ -127,6 +127,8 @@ public:
 
     void GetSmoothedVelocity( Fvector& vel ) const { vel = m_vecSmoothedVelocity; }
 
+    void GetPunchAngle( Fvector& ang ) const { ang = m_vecPunchAngle; }
+
     IPhysicsShellHolder* GetPhysicsRefObject( void ) const { return m_pPhysicsRef; }
     void SetPhysicsRefObject( IPhysicsShellHolder* obj );
 
@@ -179,6 +181,7 @@ private:
     void FinishDuck( bool bAccel );
     void SetDuckedEyeOffset( float duckFraction, bool bAccel );
     void Duck( void );
+    void DecayPunchAngle( void );
     void ReduceTimers( void );
     void Move( void );
     void TryPlayerMove( Fvector *pFirstDest=nullptr, trace_t *pFirstTrace=nullptr );
@@ -198,6 +201,7 @@ private:
     void CategorizePosition( void );
     void CategorizeGroundSurface( trace_t &pm );
     void CheckFalling( void );
+    void PlayerRoughLandingEffects( void );
     void TestPlayerPosition( const Fvector& pos, trace_t& pm, bool bWorldOnly = false );
     void TracePlayerBBox( const Fvector& start, const Fvector& end, trace_t& pm, bool bSkipActorObstacle = false );
     void TryTouchGround( const Fvector& start, const Fvector& end, const Fvector& mins, const Fvector& maxs, trace_t& pm );
@@ -287,6 +291,8 @@ private:
     Fvector m_vecGroundNormal;
     Fvector m_vecExternalImpusle;
     Fvector m_vecLadderNormal;
+    Fvector m_vecPunchAngle;
+    Fvector m_vecPunchAngleVel;
 
     xr_vector<enum_geom_t> m_PassGeoms;
 

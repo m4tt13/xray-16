@@ -1064,6 +1064,18 @@ void CPHMovementControl::GroundNormal(Fvector& norm)
     }
 }
 
+void CPHMovementControl::GetPunchAngle(Fvector& ang)
+{
+    if (eCharacterType == actor)
+    {
+        m_pHL2Movement->GetPunchAngle(ang);
+    }
+    else
+    {
+        ang.set(0.f, 0.f, 0.f);
+    }
+}
+
 void CPHMovementControl::SetEnvironment(int enviroment, int old_enviroment)
 {
     switch (enviroment)

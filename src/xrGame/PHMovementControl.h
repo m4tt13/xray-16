@@ -190,6 +190,7 @@ public:
     void GetSmoothedVelocity(Fvector& v);
     float GetContactSpeed() { return fContactSpeed; }
     void GroundNormal(Fvector& norm);
+    void GetPunchAngle(Fvector& ang);
     CPHSynchronize* GetSyncItem();
     void Freeze();
     void UnFreeze();

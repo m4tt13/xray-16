@@ -310,6 +310,11 @@ void CActor::cam_Update(float dt, float fFOV)
         dangle.z = (PI_DIV_2 - ((PI + valid_angle) / 2));
     }
 
+    Fvector punchAngle;
+    character_physics_support()->movement()->GetPunchAngle(punchAngle);
+    punchAngle.mul(PI / 180.f);
+    dangle.add(punchAngle);
+
     fPrevCamPos = xform.c.y;
 
     float _viewport_near = VIEWPORT_NEAR;

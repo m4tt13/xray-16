@@ -18,6 +18,13 @@
 
 #define	MAX_CLIP_PLANES	5
 
+#define PLAYER_MAX_SAFE_FALL_SPEED	13.1625f // approx 20 feet sqrt( 2 * gravity * 20 * 12 )
+#define PLAYER_FALL_PUNCH_THRESHOLD 7.575f // won't punch player's screen/make scrape noise unless player falling at least this fast - at least a 76" fall (sqrt( 2 * g * 76))
+
+#define PUNCH_DAMPING		9.0f		// bigger number makes the response more damped, smaller is less damped
+										// currently the system will overshoot, with larger damping values it won't
+#define PUNCH_SPRING_CONSTANT	65.0f	// bigger number increases the speed at which the view corrects
+
 const float PLAYER_SPEED_DUCK_MODIFIER	= 0.34f;
 const float PLAYER_SPEED_CLIMB_MODIFIER	= 0.34f;
 const float ACTOR_SHELL_POSITION_ADJUSTMENT	= 0.1f;
@@ -28,7 +35,7 @@ float CHL2Movement::m_flSideSpeed = 10.0f;
 float CHL2Movement::m_flWalkSpeed = 5.0f;
 float CHL2Movement::m_flSlowWalkSpeed = 2.5f;
 float CHL2Movement::m_flSprintSpeed = 8.0f;
-float CHL2Movement::m_flMaxControlSpeed = 10.0f;
+float CHL2Movement::m_flMaxControlSpeed = 8.0f;
 float CHL2Movement::m_flJumpPower = 6.75f;
 float CHL2Movement::m_flGravity = 20.0f;
 float CHL2Movement::m_flMaxVelocity = 100.0f;
@@ -37,8 +44,8 @@ float CHL2Movement::m_flBounce = 0.0f;
 float CHL2Movement::m_flStepSize = 0.5f;
 float CHL2Movement::m_flFriction = 8.0f;
 float CHL2Movement::m_flStopSpeed = 0.25f;
-float CHL2Movement::m_flStandableNormal = 0.625f;
-float CHL2Movement::m_flWalkableNormal = 0.625f;
+float CHL2Movement::m_flStandableNormal = 0.525f;
+float CHL2Movement::m_flWalkableNormal = 0.525f;
 float CHL2Movement::m_flAirMaxWishSpeed = 0.75f;
 float CHL2Movement::m_flAccelerate = 10.0f;
 float CHL2Movement::m_flAirAccelerate = 10.0f;
@@ -110,6 +117,8 @@ void CHL2Movement::Clear( void )
     m_vecGroundNormal.set( 0.0f, 1.0f, 0.0f );
     m_vecExternalImpusle.set( 0.0f, 0.0f, 0.0f );
     m_vecLadderNormal.set( 1.0f, 0.0f, 0.0f );
+    m_vecPunchAngle.set( 0.0f, 0.0f, 0.0f );
+    m_vecPunchAngleVel.set( 0.0f, 0.0f, 0.0f );
 
     m_flContactVelocity = 0.0f;
     m_vecHitDir.set( 0.0f, 1.0f, 0.0f );
@@ -152,9 +161,7 @@ void CHL2Movement::UpdateCL( void )
             float x = Device.dwWidth * 0.5f;
             float y = Device.dwHeight * 0.75f;
 
-            Fvector vel2d = m_vecVelocity;
-            vel2d.y = 0.0f;
-            float spd = vel2d.magnitude();
+            float spd = dXZMag( m_vecVelocity );
 
             pFont->SetAligment( CGameFont::alCenter );
             pFont->SetColor( color_rgba( 255, 255, 255, 255 ) );
@@ -380,6 +387,9 @@ void CHL2Movement::StartMove( void )
 
 void CHL2Movement::FinishMove( void )
 {
+    if ( m_bOnGround )
+        m_flFallVelocity = 0.0f;
+
     if ( m_nTickCount > m_nExternalImpulseEndTick )
     {
         m_nExternalImpulseEndTick = u64(-1);
@@ -943,6 +953,37 @@ void CHL2Movement::Duck( void )
 	}
 }
 
+void CHL2Movement::DecayPunchAngle( void )
+{
+    if ( m_vecPunchAngle.square_magnitude() > 0.001 || m_vecPunchAngleVel.square_magnitude() > 0.001 )
+	{
+		m_vecPunchAngle.add( Fvector().mul( m_vecPunchAngleVel, m_flFrameTime ) );
+		float damping = 1 - (PUNCH_DAMPING * m_flFrameTime);
+		
+		if ( damping < 0 )
+		{
+			damping = 0;
+		}
+		m_vecPunchAngleVel.mul( damping );
+		
+		// torsional spring
+		// UNDONE: Per-axis spring constant?
+		float springForceMagnitude = PUNCH_SPRING_CONSTANT * m_flFrameTime;
+		clamp( springForceMagnitude, 0.f, 2.f );
+		m_vecPunchAngleVel.sub( Fvector().mul( m_vecPunchAngle, springForceMagnitude ) );
+
+        // don't wrap around
+        clamp( m_vecPunchAngle.x, -89.f, 89.f );
+        clamp( m_vecPunchAngle.y, -179.f, 179.f );
+        clamp( m_vecPunchAngle.z, -89.f, 89.f );
+	}
+	else
+	{
+		m_vecPunchAngle.set( 0, 0, 0 );
+		m_vecPunchAngleVel.set( 0, 0, 0 );
+	}
+}
+
 void CHL2Movement::ReduceTimers( void )
 {
     float frame_msec = 1000.0f * m_flFrameTime;
@@ -957,6 +998,8 @@ void CHL2Movement::ReduceTimers( void )
 
 void CHL2Movement::Move( void )
 {
+    DecayPunchAngle();
+
     ReduceTimers();
 
     if ( CheckStuck() )
@@ -1204,6 +1247,11 @@ void CHL2Movement::TryPlayerMove( Fvector *pFirstDest, trace_t *pFirstTrace )
 	{
 		m_vecVelocity.set( 0.0f, 0.0f, 0.0f );
 	}
+
+    // Check if they slammed into a wall
+	float fLateralStoppingAmount = dXZMag( primal_velocity ) - dXZMag( m_vecVelocity );
+	if ( fLateralStoppingAmount > PLAYER_MAX_SAFE_FALL_SPEED )
+	    PlayerRoughLandingEffects();
 }
 
 void CHL2Movement::ClipVelocity( Fvector& in, Fvector& normal, Fvector& out, float overbounce )
@@ -1755,15 +1803,13 @@ void CHL2Movement::CheckJumpButton( void )
 	    Fvector vecForward = m_vecForward;
 	    vecForward.y = 0;
 	    vecForward.normalize2();
-        Fvector vel2d = m_vecVelocity;
-        vel2d.y = 0;
-		
+
 	    // We give a certain percentage of the current forward movement as a bonus to the jump speed.  That bonus is clipped
 	    // to not accumulate over time.
 	    float flSpeedBoostPerc = ( !m_bIsSprinting && m_pMovControl->BoxID() == 0 ) ? 0.5f : 0.1f;
 	    float flSpeedAddition = _abs( m_flForwardMove * flSpeedBoostPerc );
 	    float flMaxSpeed = m_flMaxSpeed + ( m_flMaxSpeed * flSpeedBoostPerc );
-	    float flNewSpeed = ( flSpeedAddition + vel2d.magnitude() );
+	    float flNewSpeed = ( flSpeedAddition + dXZMag( m_vecVelocity ) );
 
 	    // If we're over the maximum, we want to only boost as much as will get us to the goal speed
 	    if ( flNewSpeed > flMaxSpeed )
@@ -1873,6 +1919,9 @@ void CHL2Movement::CheckFalling( void )
 	if ( !m_bOnGround || m_flFallVelocity <= 0.0f )
 		return;
 
+    if ( m_flFallVelocity >= PLAYER_FALL_PUNCH_THRESHOLD )
+		PlayerRoughLandingEffects();
+
 	m_bContacted = true;
 
     dVector3 vel = { 0.0f, -m_flFallVelocity, 0.0f };
@@ -1887,6 +1936,19 @@ void CHL2Movement::CheckFalling( void )
 	// Clear the fall velocity so the impact doesn't happen again.
 	//
 	m_flFallVelocity = 0.0f;
+}
+
+void CHL2Movement::PlayerRoughLandingEffects( void )
+{
+	//
+	// Knock the screen around a little bit, temporary effect.
+	//
+	m_vecPunchAngle.z = m_flFallVelocity * 0.52;
+
+    if ( m_vecPunchAngle.x > 8 )
+	{
+        m_vecPunchAngle.x = 8;
+	}
 }
 
 void CHL2Movement::TestPlayerPosition( const Fvector& pos, trace_t& pm, bool bWorldOnly )

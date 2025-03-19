@@ -37,8 +37,8 @@ This modification for [OpenXRay](https://github.com/OpenXRay/xray-16) transfers 
 * sv_climbspeed - Actor's ladder climbing speed
 * sv_duckspeed - How quickly actor ducks
 * sv_unduckspeed - How quickly actor un-ducks
-* sv_pushaway_force - How hard physics objects are pushed away from the actor
-* sv_pushaway_max_force - Maximum amount of force applied to physics objects by actor
+* sv_pushaway_force - How hard the actor is pushed away from physics objects (falls off with inverse square of distance)
+* sv_pushaway_max_force - Maximum of how hard the actor is pushed away from physics objects
 * cl_speedometer - Draw actor's speed
 * sv_sticktoground - Prevents checking for sv_nonjumpvel
 * sv_enable_bhop - Make you automatically bunny hop by holding down the space bar

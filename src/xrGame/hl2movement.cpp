@@ -48,7 +48,7 @@ float CHL2Movement::m_flStandableNormal = 0.525f;
 float CHL2Movement::m_flWalkableNormal = 0.525f;
 float CHL2Movement::m_flAirMaxWishSpeed = 0.75f;
 float CHL2Movement::m_flAccelerate = 10.0f;
-float CHL2Movement::m_flAirAccelerate = 10.0f;
+float CHL2Movement::m_flAirAccelerate = 1000.0f;
 float CHL2Movement::m_flLadderDistance = 0.05f;
 float CHL2Movement::m_flLadderLeaveSpeed = 6.75f;
 float CHL2Movement::m_flClimbSpeed = 5.0f;
@@ -58,8 +58,8 @@ float CHL2Movement::m_flPushawayForce = 5000.0f;
 float CHL2Movement::m_flPushawayMaxForce = 250.0f;
 BOOL CHL2Movement::m_bSpeedometer = TRUE;
 BOOL CHL2Movement::m_bStickToGround = FALSE;
-BOOL CHL2Movement::m_bEnableBHop = FALSE;
-BOOL CHL2Movement::m_bEnableABH = TRUE;
+BOOL CHL2Movement::m_bEnableBHop = TRUE;
+int CHL2Movement::m_nABHMode = 2;
 
 CHL2Movement::CHL2Movement( CPHMovementControl* pMovementControl ) :
     m_pMovControl( pMovementControl ),
@@ -1798,18 +1798,20 @@ void CHL2Movement::CheckJumpButton( void )
 		m_vecVelocity[1] += m_flJumpPower;  // 2 * gravity * height
 	}
 
-    if ( m_bEnableABH )
+    if ( m_nABHMode != 0 )
     {
 	    Fvector vecForward = m_vecForward;
 	    vecForward.y = 0;
 	    vecForward.normalize2();
+
+        float flCurrentVelMag = dXZMag( m_vecVelocity );
 
 	    // We give a certain percentage of the current forward movement as a bonus to the jump speed.  That bonus is clipped
 	    // to not accumulate over time.
 	    float flSpeedBoostPerc = ( !m_bIsSprinting && m_pMovControl->BoxID() == 0 ) ? 0.5f : 0.1f;
 	    float flSpeedAddition = _abs( m_flForwardMove * flSpeedBoostPerc );
 	    float flMaxSpeed = m_flMaxSpeed + ( m_flMaxSpeed * flSpeedBoostPerc );
-	    float flNewSpeed = ( flSpeedAddition + dXZMag( m_vecVelocity ) );
+	    float flNewSpeed = ( flSpeedAddition + flCurrentVelMag );
 
 	    // If we're over the maximum, we want to only boost as much as will get us to the goal speed
 	    if ( flNewSpeed > flMaxSpeed )
@@ -1820,8 +1822,14 @@ void CHL2Movement::CheckJumpButton( void )
 	    if ( m_flForwardMove < 0.0f )
 		    flSpeedAddition *= -1.0f;
 
-	    // Add it on
-	    m_vecVelocity.add( vecForward*flSpeedAddition );
+        Fvector vecNewVelocity;
+        vecNewVelocity.mul( vecForward, flSpeedAddition );
+        vecNewVelocity.add( m_vecVelocity );
+
+        float flNewVelMag = dXZMag( vecNewVelocity );
+
+        if ( m_nABHMode == 1 || flNewVelMag >= flCurrentVelMag )
+	        m_vecVelocity = vecNewVelocity;
     }
 
 	FinishGravity();

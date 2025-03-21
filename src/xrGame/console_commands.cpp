@@ -2191,7 +2191,7 @@ void CCC_RegisterCommands()
     CMD4(CCC_Integer, "cl_speedometer", &CHL2Movement::m_bSpeedometer, FALSE, TRUE);
 	CMD4(CCC_Integer, "sv_sticktoground", &CHL2Movement::m_bStickToGround, FALSE, TRUE);
 	CMD4(CCC_Integer, "sv_enable_bhop", &CHL2Movement::m_bEnableBHop, FALSE, TRUE);
-    CMD4(CCC_Integer, "sv_enable_abh", &CHL2Movement::m_bEnableABH, FALSE, TRUE);
+    CMD4(CCC_Integer, "sv_abh_mode", &CHL2Movement::m_nABHMode, 0, 2);
 
     CMD1(CCC_MemStats, "stat_memory");
 

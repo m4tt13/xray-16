@@ -242,7 +242,7 @@ public:
     static BOOL m_bSpeedometer;
 	static BOOL m_bStickToGround;
 	static BOOL m_bEnableBHop;
-    static BOOL m_bEnableABH;
+    static int m_nABHMode;
     
 private:
     CPHMovementControl* m_pMovControl;

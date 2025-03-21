@@ -42,4 +42,4 @@ This modification for [OpenXRay](https://github.com/OpenXRay/xray-16) transfers 
 * cl_speedometer - Draw actor's speed
 * sv_sticktoground - Prevents checking for sv_nonjumpvel
 * sv_enable_bhop - Make you automatically bunny hop by holding down the space bar
-* sv_enable_abh - Allows Accelerated Back Hopping (ABH)
+* sv_abh_mode - 0 = Disable ABH, 1 = Enable standard ABH, 2 = Enable ABH without velocity reduction

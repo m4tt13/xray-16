@@ -2208,7 +2208,11 @@ u16 CHL2Movement::DamageInitiatorID() const
         {
             IDamageSource* ds = object->ObjectCastIDamageSource();
             if ( ds )
-                return ds->Initiator();
+            {
+				u16 initiator = ds->Initiator();
+				if ( initiator != u16(-1) )
+					return initiator;
+			}
         }
     }
 
@@ -2222,7 +2226,15 @@ IGameObject* CHL2Movement::DamageInitiator() const
         IPhysicsShellHolder* object = smart_cast<IPhysicsShellHolder*>( inl_ph_world().LevelObjects().net_Find( m_nObjectID ) );
 
         if ( object && !object->ObjectGetDestroy() )
-            object->IObject();
+        {
+            IDamageSource* ds = object->ObjectCastIDamageSource();
+            if ( ds )
+			{
+				u16 initiator = ds->Initiator();
+				if ( initiator != u16(-1) )
+					return inl_ph_world().LevelObjects().net_Find( initiator );
+			}
+        }
     }
 
     return m_pPhysicsRef->IObject();

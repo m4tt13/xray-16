@@ -1387,7 +1387,7 @@ public:
 class CCC_ScriptCommand : public IConsole_Command
 {
 public:
-    CCC_ScriptCommand(LPCSTR N) : IConsole_Command(N) { bEmptyArgsHandled = false; };
+    CCC_ScriptCommand(LPCSTR N) : IConsole_Command(N) { bEmptyArgsHandled = false; bLowerCaseArgs = false; }
     virtual void Execute(LPCSTR args)
     {
         if (!xr_strlen(args))

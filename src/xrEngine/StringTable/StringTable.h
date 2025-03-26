@@ -10,6 +10,8 @@
 #include "xrCore/xrstring.h"
 #include "xrCore/xr_token.h"
 
+#include <mutex>
+
 using STRING_ID = shared_str;
 using STRING_VALUE = shared_str;
 

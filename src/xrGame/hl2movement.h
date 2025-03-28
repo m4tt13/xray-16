@@ -28,7 +28,14 @@ public:
 
 		Flags32	&flags = GMLib.GetMaterialByIdx( tris[nTriangle].material )->Flags;
 
-        return ( !m_bSkipActorObstacle && flags.test( SGameMtl::flActorObstacle ) ) || !flags.test( SGameMtl::flPassable );
+        if ( m_bSkipActorObstacle )
+        {
+            return !flags.test( SGameMtl::flActorObstacle );
+        }
+        else
+        {
+            return ( flags.test( SGameMtl::flActorObstacle ) || !flags.test( SGameMtl::flPassable ) );
+        }
 	}
 	
 	virtual bool ShouldHitObject( CPHObject *pObject )
@@ -174,8 +181,7 @@ private:
     void StartMove( void );
     void FinishMove( void );
     void AvoidPushawayGeoms( void );
-    int CheckStuck( void );
-    void FixPlayerCrouchStuck( bool bAccel );
+    void NudgePosition( void );
     bool CanUnduck( bool bAccel );
     void FinishUnDuck( bool bAccel );
     void FinishDuck( bool bAccel );
@@ -186,6 +192,9 @@ private:
     void Move( void );
     void TryPlayerMove( Fvector *pFirstDest=nullptr, trace_t *pFirstTrace=nullptr );
     void ClipVelocity( Fvector& in, Fvector& normal, Fvector& out, float overbounce );
+    bool OnLadder( trace_t &trace );
+    bool CanGrabLadder( const Fvector& pos, const Fvector& normal );
+    void CheckForLadders( bool wasOnGround );
     bool LadderMove( void );
     void WalkMove( void );
     void Accelerate( Fvector& wishdir, float wishspeed, float accel );
@@ -202,7 +211,6 @@ private:
     void CategorizeGroundSurface( trace_t &pm );
     void CheckFalling( void );
     void PlayerRoughLandingEffects( void );
-    void TestPlayerPosition( const Fvector& pos, trace_t& pm, bool bWorldOnly = false );
     void TracePlayerBBox( const Fvector& start, const Fvector& end, trace_t& pm, bool bSkipActorObstacle = false );
     void TryTouchGround( const Fvector& start, const Fvector& end, const Fvector& mins, const Fvector& maxs, trace_t& pm );
     void TryTouchGroundInQuadrants( const Fvector& start, const Fvector& end, trace_t& pm );
@@ -234,6 +242,7 @@ public:
 	static float m_flAirAccelerate;
     static float m_flLadderDistance;
     static float m_flLadderLeaveSpeed;
+    static float m_flLadderNormal;
     static float m_flClimbSpeed;
     static float m_flDuckSpeed;
     static float m_flUnDuckSpeed;
@@ -259,6 +268,7 @@ private:
 
     u64 m_nTickCount;
     u64 m_nExternalImpulseEndTick;
+    u64 m_nLadderSurpressionEndTick;
 
     EDucking m_eDucking;
 
@@ -289,8 +299,11 @@ private:
     Fvector m_vecSmoothedVelocity;
     Fvector m_vecControlVelocity;
     Fvector m_vecGroundNormal;
+    Fvector m_vecLastStandingPos;
     Fvector m_vecExternalImpusle;
     Fvector m_vecLadderNormal;
+    Fvector m_vecLastLadderPos;
+    Fvector m_vecLastLadderNormal;
     Fvector m_vecPunchAngle;
     Fvector m_vecPunchAngleVel;
 

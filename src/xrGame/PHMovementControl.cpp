@@ -42,7 +42,7 @@
 //#define AIR_RESIST		0.001f
 
 #define def_X_SIZE_2 0.35f
-#define def_Y_SIZE_2 0.8f
+#define def_Y_SIZE_2 0.825f
 #define def_Z_SIZE_2 0.35f
 
 //const u64 after_creation_collision_hit_block_steps_number = 100;

@@ -2183,6 +2183,7 @@ void CCC_RegisterCommands()
 	CMD2(CCC_Float_NoLimits, "sv_airaccelerate", &CHL2Movement::m_flAirAccelerate);
     CMD2(CCC_Float_NoLimits, "sv_ladder_dist", &CHL2Movement::m_flLadderDistance);
     CMD2(CCC_Float_NoLimits, "sv_ladder_leavespeed", &CHL2Movement::m_flLadderLeaveSpeed);
+    CMD2(CCC_Float_NoLimits, "sv_ladder_normal", &CHL2Movement::m_flLadderNormal);
 	CMD2(CCC_Float_NoLimits, "sv_climbspeed", &CHL2Movement::m_flClimbSpeed);
     CMD2(CCC_Float_NoLimits, "sv_duckspeed", &CHL2Movement::m_flDuckSpeed);
     CMD2(CCC_Float_NoLimits, "sv_unduckspeed", &CHL2Movement::m_flUnDuckSpeed);

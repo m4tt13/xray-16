@@ -12,6 +12,7 @@
 #include "xrPhysics/PHSimpleCharacter.h"
 #include "xrPhysics/PHObject.h"
 #include "xrServerEntities/PHSynchronize.h"
+#include "Actor_Flags.h"
 #include "physicsquery.h"
 #include "hl2movement.h"
 #include "collisionutils.h"
@@ -51,6 +52,7 @@ float CHL2Movement::m_flAccelerate = 10.0f;
 float CHL2Movement::m_flAirAccelerate = 1000.0f;
 float CHL2Movement::m_flLadderDistance = 0.05f;
 float CHL2Movement::m_flLadderLeaveSpeed = 6.75f;
+float CHL2Movement::m_flLadderNormal = 0.5f;
 float CHL2Movement::m_flClimbSpeed = 5.0f;
 float CHL2Movement::m_flDuckSpeed = 0.4f;
 float CHL2Movement::m_flUnDuckSpeed = 0.2f;
@@ -87,6 +89,7 @@ void CHL2Movement::Clear( void )
     m_nOldBoxID = 0;
 
     m_nExternalImpulseEndTick = u64(-1);
+    m_nLadderSurpressionEndTick = u64(-1);
 
 	m_surfaceFriction = 1.0f;
     m_flForwardMove = 0.0f;
@@ -115,8 +118,11 @@ void CHL2Movement::Clear( void )
     m_vecSmoothedVelocity.set( 0.0f, 0.0f, 0.0f );
     m_vecControlVelocity.set( 0.0f, 0.0f, 0.0f );
     m_vecGroundNormal.set( 0.0f, 1.0f, 0.0f );
+    m_vecLastStandingPos.set( 0.0f, 0.0f, 0.0f );
     m_vecExternalImpusle.set( 0.0f, 0.0f, 0.0f );
     m_vecLadderNormal.set( 1.0f, 0.0f, 0.0f );
+    m_vecLastLadderPos.set( 0.0f, 0.0f, 0.0f );
+    m_vecLastLadderNormal.set( 1.0f, 0.0f, 0.0f );
     m_vecPunchAngle.set( 0.0f, 0.0f, 0.0f );
     m_vecPunchAngleVel.set( 0.0f, 0.0f, 0.0f );
 
@@ -131,7 +137,7 @@ void CHL2Movement::Clear( void )
 
 void CHL2Movement::UpdateCL( void )
 {
-    if ( !m_bActivated )
+    if ( !m_bActivated || psActorFlags.test( AF_NO_CLIP ) )
         return;
 
     m_dblRemainder += Device.fTimeDelta;
@@ -176,14 +182,19 @@ void CHL2Movement::Activate( const Fvector& pos )
         return;
 
     Clear();
-    SetPosition( pos );
+
+    m_vecOrigin = pos;
+
+    NudgePosition();
+
+    m_vecOldOrigin = m_vecOrigin;
 
     m_pPhysicsShell = create_actor_shell( 
         m_pMovControl, 
         m_pPhysicsRef, 
         ObjectContactCallback, 
         this, 
-        pos, 
+        m_vecOrigin, 
         m_pMovControl->Box(), 
         m_pMovControl->GetMass(), 
         m_pMovControl->GetMaterial() );
@@ -270,10 +281,13 @@ void CHL2Movement::ApplyImpulse( const Fvector& dir, float force )
 void CHL2Movement::SetPosition( const Fvector& pos )
 {
     m_vecOrigin = pos;
-    m_vecOldOrigin = pos;
+
+    NudgePosition();
+
+    m_vecOldOrigin = m_vecOrigin;
 
     if ( m_pPhysicsShell )
-        m_pPhysicsShell->SetPosition( pos );
+        m_pPhysicsShell->SetPosition( m_vecOrigin );
 }
 
 void CHL2Movement::GetIPosition( Fvector& pos ) const
@@ -538,7 +552,7 @@ void CreateStuckTable( void )
 
     x = z = 0;
 	// Y moves
-	for (y = -0.01f ; y <= 0.01f ; y += 0.01f)
+	for (y = -0.025f ; y <= 0.025f ; y += 0.025f)
 	{
 		rgv3tStuckTable[idx][0] = x;
 		rgv3tStuckTable[idx][1] = y;
@@ -547,7 +561,7 @@ void CreateStuckTable( void )
 	}
     y = z = 0;
 	// X moves
-	for (x = -0.01f ; x <= 0.01f ; x += 0.01f)
+	for (x = -0.025f ; x <= 0.025f ; x += 0.025f)
 	{
 		rgv3tStuckTable[idx][0] = x;
 		rgv3tStuckTable[idx][1] = y;
@@ -556,7 +570,7 @@ void CreateStuckTable( void )
 	}
 	x = y = 0;
 	// Z moves
-	for (z = -0.01f ; z <= 0.01f ; z += 0.01f)
+	for (z = -0.025f ; z <= 0.025f ; z += 0.025f)
 	{
 		rgv3tStuckTable[idx][0] = x;
 		rgv3tStuckTable[idx][1] = y;
@@ -565,11 +579,11 @@ void CreateStuckTable( void )
 	}
 
 	// Remaining multi axis nudges.
-	for ( x = - 0.01f; x <= 0.01f; x += 0.02f )
+	for ( x = - 0.025f; x <= 0.025f; x += 0.05f )
 	{
-		for ( y = - 0.01f; y <= 0.01f; y += 0.02f )
+		for ( y = - 0.025f; y <= 0.025f; y += 0.05f )
 		{
-			for ( z = - 0.01f; z <= 0.01f; z += 0.02f )
+			for ( z = - 0.025f; z <= 0.025f; z += 0.05f )
 			{
 				rgv3tStuckTable[idx][0] = x;
 				rgv3tStuckTable[idx][1] = y;
@@ -582,8 +596,8 @@ void CreateStuckTable( void )
 	// Big Moves.
 	x = z = 0;
 	yi[0] = 0.0f;
-	yi[1] = 0.05f;
-	yi[2] = 0.15f;
+	yi[1] = 0.15f;
+	yi[2] = 0.25f;
 
 	for (i = 0; i < 3; i++)
 	{
@@ -597,7 +611,7 @@ void CreateStuckTable( void )
 
     y = z = 0;
 	// X moves
-	for (x = -0.05f ; x <= 0.05f ; x += 0.05f)
+	for (x = -0.1f ; x <= 0.1f ; x += 0.1f)
 	{
 		rgv3tStuckTable[idx][0] = x;
 		rgv3tStuckTable[idx][1] = y;
@@ -606,7 +620,7 @@ void CreateStuckTable( void )
 	}
 	x = y = 0;
 	// Z moves
-	for (z = -0.05f ; z <= 0.05f ; z += 0.05f)
+	for (z = -0.1f ; z <= 0.1f ; z += 0.1f)
 	{
 		rgv3tStuckTable[idx][0] = x;
 		rgv3tStuckTable[idx][1] = y;
@@ -619,9 +633,9 @@ void CreateStuckTable( void )
 	{
 		y = yi[i];
 		
-		for (x = -0.05f ; x <= 0.05f ; x += 0.05f)
+		for (x = -0.1f ; x <= 0.1f ; x += 0.1f)
 		{
-			for (z = -0.05f ; z <= 0.05f ; z += 0.05f)
+			for (z = -0.1f ; z <= 0.1f ; z += 0.1f)
 			{
 				rgv3tStuckTable[idx][0] = x;
 				rgv3tStuckTable[idx][1] = y;
@@ -633,102 +647,65 @@ void CreateStuckTable( void )
 	VERIFY( idx < sizeof(rgv3tStuckTable)/sizeof(rgv3tStuckTable[0]));
 }
 
-int CHL2Movement::CheckStuck( void )
+void CHL2Movement::NudgePosition( void )
 {
+    const Fbox& box = m_pMovControl->Box();
+
 	Fvector test;
+    Ray_t ray;
     trace_t traceresult;
+    CTraceFilterActorMovement traceFilter( nullptr, true );
 
     CreateStuckTable();
 
-    TestPlayerPosition( m_vecOrigin, traceresult, true );
+    ray.Init( m_vecOrigin, m_vecOrigin, box.vMin, box.vMax );
+    PhysicsQuery().TraceRay( ray, &traceFilter, &traceresult );
 
     if ( !traceresult.DidHit() )
-        return 0;
+        return;
 
 	for ( int i = 0; i < 54; i++ )
     {
 		test.add( m_vecOrigin, rgv3tStuckTable[i] );
 		
-        TestPlayerPosition( test, traceresult, true );
+        ray.Init( test, test, box.vMin, box.vMax );
+        PhysicsQuery().TraceRay( ray, &traceFilter, &traceresult );
 
 		if ( !traceresult.DidHit() )
 		{
 			m_vecOrigin = test;
-			return 0;
+			return;
 		}
 	}
-
-    return 1;
-}
-
-void CHL2Movement::FixPlayerCrouchStuck( bool bAccel )
-{
-	float i;
-	Fvector test;
-	trace_t dummy;
-
-	TestPlayerPosition( m_vecOrigin, dummy );
-	if ( !dummy.DidHit() )
-		return;
-	
-    Fvector boxSize;
-    m_pMovControl->Boxes()[bAccel ? 2 : 1].getsize( boxSize );
-
-	test = m_vecOrigin;
-	for ( i = 0.0f; i < boxSize.y; i += 0.05f )
-	{
-		m_vecOrigin.y += i;
-		TestPlayerPosition( m_vecOrigin, dummy );
-		if ( !dummy.DidHit() )
-			return;
-	}
-
-	m_vecOrigin = test; // Failed
 }
 
 bool CHL2Movement::CanUnduck( bool bAccel )
 {
-	trace_t trace;
-	Fvector newOrigin = m_vecOrigin;
+    Fvector hullSizeNormal, hullSizeCrouch;
+    hullSizeNormal.sub( m_pMovControl->Boxes()[bAccel ? 1 : 0].vMax, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMin );
+    hullSizeCrouch.sub( m_pMovControl->Boxes()[bAccel ? 2 : 1].vMax, m_pMovControl->Boxes()[bAccel ? 2 : 1].vMin );
+
+    Fvector viewDelta;
+    viewDelta.sub( hullSizeNormal, hullSizeCrouch );
+
+    Fvector newOrigin = m_vecOrigin;
 
 	if ( m_bOnGround )
 	{
-        Fvector viewDelta;
-		viewDelta.sub( m_pMovControl->Boxes()[bAccel ? 2 : 1].vMin, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMin );
-
-        newOrigin.add( viewDelta );
+		newOrigin.add( viewDelta );
 	}
 	else
 	{
 		// If in air an letting go of croush, make sure we can offset origin to make
 		//  up for uncrouching
-        Fvector hullSizeNormal;
-        hullSizeNormal.sub( m_pMovControl->Boxes()[bAccel ? 1 : 0].vMax, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMin );
-
-	    Fvector hullSizeCrouch;
-        hullSizeCrouch.sub( m_pMovControl->Boxes()[bAccel ? 2 : 1].vMax, m_pMovControl->Boxes()[bAccel ? 2 : 1].vMin );
-
-	    Fvector viewDelta;
-        viewDelta.sub( hullSizeNormal, hullSizeCrouch );
-        viewDelta.mul( -0.5f );
-
-		newOrigin.add( viewDelta );
+		newOrigin.sub( viewDelta );
 	}
 
-    Ray_t ray;
-    CTraceFilterActorMovement traceFilter( m_pPhysicsShell, m_bCollisionDisabled, false, &m_PassGeoms );
-
-    ray.Init( m_vecOrigin, m_vecOrigin, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMin, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMax );
-    PhysicsQuery().TraceRay( ray, &traceFilter, &trace );
+    trace_t trace;
+    TracePlayerBBox( m_vecOrigin, newOrigin, trace );
 
     if ( trace.DidHit() )
         return false;
-
-    ray.Init( m_vecOrigin, newOrigin, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMin, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMax );
-    PhysicsQuery().TraceRay( ray, &traceFilter, &trace );
-
-	if ( trace.DidHit() )
-		return false;	
 
 	return true;
 }
@@ -739,24 +716,22 @@ void CHL2Movement::FinishUnDuck( bool bAccel )
 	{
         Fvector viewDelta;
 		viewDelta.sub( m_pMovControl->Boxes()[bAccel ? 2 : 1].vMin, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMin );
-
         m_vecOrigin.add( viewDelta );
 	}
 	else
 	{
 		// If in air an letting go of croush, make sure we can offset origin to make
 		//  up for uncrouching
-        Fvector hullSizeNormal;
+        Fvector hullSizeNormal, hullSizeCrouch;
         hullSizeNormal.sub( m_pMovControl->Boxes()[bAccel ? 1 : 0].vMax, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMin );
-
-	    Fvector hullSizeCrouch;
         hullSizeCrouch.sub( m_pMovControl->Boxes()[bAccel ? 2 : 1].vMax, m_pMovControl->Boxes()[bAccel ? 2 : 1].vMin );
 
-	    Fvector viewDelta;
+        Fvector viewDelta;
         viewDelta.sub( hullSizeNormal, hullSizeCrouch );
-        viewDelta.mul( -0.5f );
+		m_vecOrigin.sub( viewDelta );
 
-		m_vecOrigin.add( viewDelta );
+        viewDelta.sub( m_pMovControl->Boxes()[bAccel ? 2 : 1].vMin, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMin );
+        m_vecOrigin.add( viewDelta );
 	}
 
     m_pMovControl->ActivateBox( bAccel ? 1 : 0 );
@@ -776,33 +751,28 @@ void CHL2Movement::FinishDuck( bool bAccel )
     m_flCameraHeight = m_pMovControl->Box().vMax.y;
 	m_eDucking = DUCKING_NONE;
 
-	if ( !bDucked )
-	{
-		if ( m_bOnGround )
-		{
+    if ( !bDucked )
+    {
+	    if ( m_bOnGround )
+	    {
+            Fvector viewDelta;
+		    viewDelta.sub( m_pMovControl->Boxes()[bAccel ? 2 : 1].vMin, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMin );
+            m_vecOrigin.sub( viewDelta );
+	    }
+	    else
+	    {
             Fvector viewDelta;
             viewDelta.sub( m_pMovControl->Boxes()[bAccel ? 2 : 1].vMin, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMin );
+            m_vecOrigin.sub( viewDelta );
 
-			m_vecOrigin.sub( viewDelta );
-		}
-		else
-		{
-            Fvector hullSizeNormal;
+            Fvector hullSizeNormal, hullSizeCrouch;
             hullSizeNormal.sub( m_pMovControl->Boxes()[bAccel ? 1 : 0].vMax, m_pMovControl->Boxes()[bAccel ? 1 : 0].vMin );
-
-	        Fvector hullSizeCrouch;
             hullSizeCrouch.sub( m_pMovControl->Boxes()[bAccel ? 2 : 1].vMax, m_pMovControl->Boxes()[bAccel ? 2 : 1].vMin );
 
-	        Fvector viewDelta;
             viewDelta.sub( hullSizeNormal, hullSizeCrouch );
-            viewDelta.mul( 0.5f );
-
-			m_vecOrigin.add( viewDelta );
-		}
-	}
-
-	// See if we are stuck?
-	FixPlayerCrouchStuck( bAccel );
+		    m_vecOrigin.add( viewDelta );
+	    }
+    }
 
 	// Recategorize position since ducking can change origin
 	CategorizePosition();
@@ -1002,9 +972,6 @@ void CHL2Movement::Move( void )
 
     ReduceTimers();
 
-    if ( CheckStuck() )
-        return;
-
     Duck();
 
     if ( !LadderMove() && m_bOnLadder )
@@ -1051,6 +1018,8 @@ void CHL2Movement::Move( void )
 	    {
 		    AirMove();  // Take into account movement when in air.
 	    }
+
+        CheckForLadders(m_bOnGround);
 
 	    // Set final flags.
 	    CategorizePosition();
@@ -1118,21 +1087,6 @@ void CHL2Movement::TryPlayerMove( Fvector *pFirstDest, trace_t *pFirstTrace )
 		//  zero the plane counter.
 		if( pm.fraction > 0 )
 		{	
-			if ( numbumps > 0 && pm.fraction == 1 )
-			{
-				// There's a precision issue with terrain tracing that can cause a swept box to successfully trace
-				// when the end position is stuck in the triangle.  Re-run the test with an uswept box to catch that
-				// case until the bug is fixed.
-				// If we detect getting stuck, don't allow the movement
-				trace_t stuck;
-				TracePlayerBBox( pm.endpos, pm.endpos, stuck );
-				if ( stuck.startsolid || stuck.fraction != 1.0f )
-				{
-					m_vecVelocity.set( 0.0f, 0.0f, 0.0f );
-					break;
-				}
-			}
-
 			// actually covered some distance
 			m_vecOrigin = pm.endpos;
 			original_velocity = m_vecVelocity;
@@ -1277,6 +1231,86 @@ void CHL2Movement::ClipVelocity( Fvector& in, Fvector& normal, Fvector& out, flo
 	}
 }
 
+bool CHL2Movement::OnLadder( trace_t &trace )
+{
+    if ( trace.plane.normal.y > m_flLadderNormal )
+		return false;
+
+	if ( IsLeaderGeomShell( trace.object ) )
+		return true;
+
+	return false;
+}
+
+bool CHL2Movement::CanGrabLadder( const Fvector& pos, const Fvector& normal )
+{
+	if ( m_nTickCount > m_nLadderSurpressionEndTick )
+	{
+		return true;
+	}
+
+	const float MaxDist = 1.6f;
+	if ( pos.distance_to_xz_sqr( m_vecLastLadderPos ) < MaxDist * MaxDist )
+	{
+		return false;
+	}
+
+	if ( normal != m_vecLastLadderNormal )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void CHL2Movement::CheckForLadders( bool wasOnGround )
+{
+	if ( !wasOnGround )
+	{
+		// If we're higher than the last place we were on the ground, bail - obviously we're not dropping
+		// past a ladder we might want to grab.
+		if ( m_vecOrigin.y > m_vecLastStandingPos.y )
+			return;
+
+		Fvector dir;
+        dir.sub( m_vecOrigin, m_vecLastStandingPos );
+		if ( !dir.x && !dir.z )
+		{
+			// If we're dropping straight down, we don't know which way to look for a ladder.  Oh well.
+			return;
+		}
+
+		dir.y = 0.0f;
+		float dist = dir.normalize2();
+		if ( dist > 1.6f )
+		{
+			// Don't grab ladders too far behind us.
+			return;
+		}
+
+        Fvector end;
+        end.mad( m_vecLastStandingPos, dir, -(0.1f + dist) );
+
+		trace_t trace;
+		TracePlayerBBox( m_vecOrigin, end, trace );
+
+		if ( trace.fraction != 1.0f && OnLadder( trace ) )
+		{
+            if ( CanGrabLadder( trace.endpos, trace.plane.normal ) )
+            {
+			    m_bOnLadder = true;
+			    m_vecLadderNormal = trace.plane.normal;
+			    m_vecVelocity.set( 0.0f, 0.0f, 0.0f );
+                m_vecOrigin = trace.endpos;
+            }
+		}
+	}
+	else
+	{
+		m_vecLastStandingPos = m_vecOrigin;
+	}
+}
+
 bool CHL2Movement::LadderMove( void )
 {
 	trace_t pm;
@@ -1310,11 +1344,10 @@ bool CHL2Movement::LadderMove( void )
 	TracePlayerBBox( m_vecOrigin, end, pm );
 
 	// no ladder in that direction, return
-	if ( pm.fraction == 1.0f || !IsLeaderGeomShell( pm.object ) )
+	if ( pm.fraction == 1.0f || !OnLadder( pm ) )
 		return false;
 
 	m_bOnLadder = true;
-
 	m_vecLadderNormal = pm.plane.normal;
 
 	// On ladder, convert movement to be relative to the ladder
@@ -1390,6 +1423,10 @@ bool CHL2Movement::LadderMove( void )
 			m_vecVelocity.set( 0.0f, 0.0f, 0.0f );
 		}
 	}
+
+    m_nLadderSurpressionEndTick = m_nTickCount + TIME_TO_TICKS(1.0f);
+	m_vecLastLadderPos = m_vecOrigin;
+	m_vecLastLadderNormal = m_vecLadderNormal;
 
 	return true;
 }
@@ -1901,18 +1938,27 @@ void CHL2Movement::CategorizePosition( void )
 
 void CHL2Movement::CategorizeGroundSurface( trace_t &pm )
 {
-    *m_pLastMaterial = pm.material;
+    trace_t trace;
+    TracePlayerBBox( m_vecOrigin, m_vecOrigin, trace, true );
 
-    if ( GMLib.GetMaterialByIdx( *m_pLastMaterial )->Flags.test( SGameMtl::flActorObstacle ) )
+    if ( trace.DidHit() )
     {
-        trace_t trace;
-        Fvector end = m_vecOrigin;
-        end.y -= 0.25f;
+        *m_pLastMaterial = trace.material;
+    }
+    else
+    {
+        *m_pLastMaterial = pm.material;
 
-        TracePlayerBBox( m_vecOrigin, end, trace, true );
+        if ( GMLib.GetMaterialByIdx( *m_pLastMaterial )->Flags.test( SGameMtl::flActorObstacle ) )
+        {
+            Fvector end = m_vecOrigin;
+            end.y -= 0.25f;
 
-        if ( trace.DidHit() )
-            *m_pLastMaterial = trace.material;
+            TracePlayerBBox( m_vecOrigin, end, trace, true );
+
+            if ( trace.DidHit() )
+                *m_pLastMaterial = trace.material;
+        }
     }
 
     if ( GMLib.GetMaterialByIdx( *m_pLastMaterial )->Flags.test( SGameMtl::flInjurious ) )
@@ -1957,17 +2003,6 @@ void CHL2Movement::PlayerRoughLandingEffects( void )
 	{
         m_vecPunchAngle.x = 8;
 	}
-}
-
-void CHL2Movement::TestPlayerPosition( const Fvector& pos, trace_t& pm, bool bWorldOnly )
-{
-    const Fbox& box = m_pMovControl->Box();
-
-	Ray_t ray;
-	ray.Init( pos, pos, box.vMin, box.vMax );
-    CTraceFilterActorMovement traceFilter( m_pPhysicsShell, bWorldOnly ? true : m_bCollisionDisabled, false, &m_PassGeoms );
-
-    PhysicsQuery().TraceRay( ray, &traceFilter, &pm );
 }
 
 void CHL2Movement::TracePlayerBBox( const Fvector& start, const Fvector& end, trace_t& pm, bool bSkipActorObstacle )

@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <mutex>
-
 #include "xrCommon/xr_map.h"
 #include "xrCore/xrstring.h"
 #include "xrCore/xr_token.h"

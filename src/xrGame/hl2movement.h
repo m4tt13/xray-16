@@ -290,6 +290,7 @@ private:
     bool m_bJumped;
     bool m_bContacted;
     bool m_bIsSprinting;
+    bool m_bWantsToRecategorizePosition;
 
 	Fvector m_vecForward;
 	Fvector m_vecRight;

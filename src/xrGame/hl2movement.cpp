@@ -109,6 +109,7 @@ void CHL2Movement::Clear( void )
     m_bContacted = false;
     m_eDucking = DUCKING_NONE;
     m_bIsSprinting = false;
+    m_bWantsToRecategorizePosition = true;
 
 	SetDirection( Fvector().set( 1.0f, 0.0f, 0.0f ) );
 
@@ -188,6 +189,8 @@ void CHL2Movement::Activate( const Fvector& pos )
     NudgePosition();
 
     m_vecOldOrigin = m_vecOrigin;
+
+    m_bWantsToRecategorizePosition = true;
 
     m_pPhysicsShell = create_actor_shell( 
         m_pMovControl, 
@@ -285,6 +288,8 @@ void CHL2Movement::SetPosition( const Fvector& pos )
     NudgePosition();
 
     m_vecOldOrigin = m_vecOrigin;
+
+    m_bWantsToRecategorizePosition = true;
 
     if ( m_pPhysicsShell )
         m_pPhysicsShell->SetPosition( m_vecOrigin );
@@ -596,8 +601,8 @@ void CreateStuckTable( void )
 	// Big Moves.
 	x = z = 0;
 	yi[0] = 0.0f;
-	yi[1] = 0.15f;
-	yi[2] = 0.25f;
+	yi[1] = 0.1f;
+	yi[2] = 0.3f;
 
 	for (i = 0; i < 3; i++)
 	{
@@ -971,6 +976,12 @@ void CHL2Movement::Move( void )
     DecayPunchAngle();
 
     ReduceTimers();
+
+    if ( m_bWantsToRecategorizePosition )
+    {
+        m_bWantsToRecategorizePosition = false;
+        CategorizePosition();
+    }
 
     Duck();
 
@@ -1887,14 +1898,13 @@ void CHL2Movement::CategorizePosition( void )
 	
 	// see if standing on something solid	
 
-	float flOffset = 0.05f;
-
 	point[0] = m_vecOrigin[0];
-	point[1] = m_vecOrigin[1] - flOffset;
+	point[1] = m_vecOrigin[1] - 0.05f;
 	point[2] = m_vecOrigin[2];
 
 	Fvector bumpOrigin;
 	bumpOrigin = m_vecOrigin;
+    bumpOrigin.y += 0.05f;
 
 	// Was on ground, but now suddenly am not
 	if ( ( m_vecVelocity[1] > m_flNonJumpVelocity && !m_bStickToGround ) ||
@@ -1904,8 +1914,11 @@ void CHL2Movement::CategorizePosition( void )
 	}
 	else
 	{
+        TracePlayerBBox( m_vecOrigin, bumpOrigin, pm );
+        bumpOrigin = pm.endpos;
+
 		// Try and move down.
-		TryTouchGround( bumpOrigin, point, box.vMin, box.vMax, pm );
+		TracePlayerBBox( bumpOrigin, point, pm );
 
 		// Was on ground, but now suddenly am not.  If we hit a steep plane, we are not on ground
 		if ( !pm.DidHit() || pm.plane.normal[1] < m_flStandableNormal )

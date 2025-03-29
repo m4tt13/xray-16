@@ -34,7 +34,7 @@ This modification for [OpenXRay](https://github.com/OpenXRay/xray-16) transfers 
 * sv_airaccelerate - Linear acceleration amount in air
 * sv_ladder_dist - The distance an actor can be from a ladder and still attach to it
 * sv_ladder_leavespeed - The speed that is given to an actor when jumping down a ladder
-* sv_ladder_normal - Ignore ladder if their vertical normal component is greater than this value
+* sv_ladder_normal - Ignore a ladder if its vertical normal component is greater than this value
 * sv_climbspeed - Actor's ladder climbing speed
 * sv_duckspeed - How quickly actor ducks
 * sv_unduckspeed - How quickly actor un-ducks
